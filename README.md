@@ -1,2 +1,2 @@
-# Orange-cat-SC2bot
+# SC2bot
  
