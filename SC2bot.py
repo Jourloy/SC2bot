@@ -8,6 +8,12 @@ from sc2 import Race, Difficulty
 from sc2.constants import *
 from sc2.ids.buff_id import BuffId
 from sc2.player import Bot, Computer, Human
+from sc2.bot_ai import CanAffordWrapper
+from sc2.data import Result
+from sc2.game_info import Ramp
+from sc2.position import Point2
+from sc2.unit import Unit, UnitOrder
+from sc2.units import Units
 
 #Основные библеотеки бота
 from bot import situation
@@ -33,7 +39,7 @@ class Orange_Cat(sc2.BotAI):
         print("----------------------------------------------------------- ")
         print("Основная информация")
         print("Время в секундах: {}".format(str(round(self.time))))
-        print("Раса противника: {}".format(str(self.situation.enemyRace)))
+        print("Раса противника: {}".format(self.situation.enemyRaceStr))
         print("Сапплай блок: {}".format(supplyBlock))
         print("\nРесурсы")
         print("Минералов: {}".format(str(self.minerals)))
@@ -99,7 +105,7 @@ if __name__ == '__main__':
     os.system('cls')
     try:
         print("Выберите режим:")
-        print("1 - играть самому против бота \n2 - Бот против бота\n\n")
+        print("1 - Играть самому против бота \n2 - Бот против бота\n\n")
         answer = str(input("Ответ: "))
     except:
         pass
@@ -109,10 +115,10 @@ if __name__ == '__main__':
             userName = str(input("Введите свой ник: "))
             os.system('cls')
             print("Выберите свою расу:")
-            print("1 - Protoss")
-            print("2 - Zerg")
-            print("3 - Terran")
-            print("4 - Random\n\n")
+            print("1 - Протос")
+            print("2 - Зерг")
+            print("3 - Терран")
+            print("4 - Случайно\n\n")
             answer = str(input("Ответ: "))
         except:
             pass
@@ -142,10 +148,10 @@ if __name__ == '__main__':
         try:
             os.system('cls')
             print("Выберите расу бота-противника:")
-            print("1 - Protoss")
-            print("2 - Zerg")
-            print("3 - Terran")
-            print("4 - Random\n\n")
+            print("1 - Протос")
+            print("2 - Зерг")
+            print("3 - Терран")
+            print("4 - Случайно\n\n")
             answer = str(input("Ответ: "))
         except:
             pass
