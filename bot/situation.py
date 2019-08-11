@@ -23,7 +23,7 @@ class Situation:
         self.enemyRace: Race  = AI.enemy_race
         self.supplyBlocked = False
         self.AI: sc2.BotAI = AI
-        self._knownEnemyUnitsWorkers: Units = Units([])
+        #self._knownEnemyUnitsWorkers: Units = Units([])
         self.supplyLeft = 1
 
     async def update(self, interation: int):
@@ -39,17 +39,17 @@ class Situation:
         elif self.supplyBlocked and self.supplyLeft > 0:
             self.supplyBlocked = False
 
-        self.updateEnemy()
+        #self.updateEnemy()
 
-    @property
-    def knownEnemyWorkers(self) -> Units:
-        return self._knownEnemyUnitsWorkers
+    #@property
+    #def knownEnemyWorkers(self) -> Units:
+        #return self._knownEnemyUnitsWorkers
 
-    def updateEnemy(self):
-        if self.enemyRace == Race.Random:
-            if self._knownEnemyUnitsWorkers(UnitTypeId.SCV).exists:
-                self.enemyRace = Race.Terran
-            if self._knownEnemyUnitsWorkers(UnitTypeId.DRONE).exists:
-                self.enemyRace = Race.Zerg
-            if self._knownEnemyUnitsWorkers(UnitTypeId.PROBE).exists:
-                self.enemyRace = Race.Protoss
+    #def updateEnemy(self):
+        #if self.enemyRace == Race.Random:
+            #if self._knownEnemyUnitsWorkers(UnitTypeId.SCV).exists:
+                #self.enemyRace = Race.Terran
+            #if self._knownEnemyUnitsWorkers(UnitTypeId.DRONE).exists:
+                #self.enemyRace = Race.Zerg
+            #if self._knownEnemyUnitsWorkers(UnitTypeId.PROBE).exists:
+                #self.enemyRace = Race.Protoss
