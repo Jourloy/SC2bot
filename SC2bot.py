@@ -10,14 +10,10 @@ from sc2.ids.buff_id import BuffId
 from sc2.player import Bot, Computer, Human
 from sc2.bot_ai import CanAffordWrapper
 from sc2.data import Result
-from sc2.game_info import Ramp
+from sc2.game_info import *
 from sc2.position import Point2
 from sc2.unit import Unit, UnitOrder
 from sc2.units import Units
-
-#Основные библеотеки бота
-from bot import situation
-from bot import manager
 
 #Другие библеотеки
 import os
@@ -26,12 +22,17 @@ import hues
 class Orange_Cat(sc2.BotAI):
     def __init__(self):
         super().__init__()
-        self.situation = situation.Situation(sc2.BotAI)
-        self.manager = manager.Manager(sc2.BotAI)
         self.actions = []
 
+        self.iteration = None
+        self.enemyRaceStr = "None"
+        self.supplyBlocked = False
+        self.probescout = False
+        self.probeguard = False
+        self.scoutProbe = False
+
     def printInfo(self):
-        if self.situation.supplyBlocked:
+        if self.supplyBlocked:
             supplyBlock = "ДА"
         else:
             supplyBlock = "НЕТ"
@@ -39,26 +40,80 @@ class Orange_Cat(sc2.BotAI):
         print("----------------------------------------------------------- ")
         print("Основная информация")
         print("Время в секундах: {}".format(str(round(self.time))))
-        print("Раса противника: {}".format(self.situation.enemyRaceStr))
+        print("Раса противника: {}".format(self.enemyRaceStr))
         print("Сапплай блок: {}".format(supplyBlock))
         print("\nРесурсы")
-        print("Минералов: {}".format(str(self.minerals)))
-        print("Газа: {}".format(str(self.vespene)))
+        print("Минералы: {}".format(str(self.minerals)))
+        print("Газ: {}".format(str(self.vespene)))
         print("\nЮниты")
-        print("Рабов: {}".format(str(self.workers.amount)))
+        print("Рабы: {}".format(str(self.workers.amount)))
         print("----------------------------------------------------------- ")
         for x in self.actions:
-            pass
+            print(x)
+
+    async def update(self):
+
+        if not self.supplyBlocked and self.supply_left <= 1:
+            self.supplyBlocked = True
+        elif self.supplyBlocked and self.supply_left > 1:
+            self.supplyBlocked = False
+
+        if self.enemyRace == Race.Random:
+            self.enemyRaceStr = "Неизвестно"
+        elif self.enemyRace == Race.Terran:
+            self.enemyRaceStr = "Терран"
+        elif self.enemyRace == Race.Protoss:
+            self.enemyRaceStr = "Протос"
+        elif self.enemyRace == Race.Zerg:
+            self.enemyRaceStr = "Зерг"
+
+    async def scouting(self):
+        if not self.probescout:
+            if not self.units(UnitTypeId.PROBE).ready:
+                return
+            probes = self.units(UnitTypeId.PROBE).ready
+            for probe in probes:
+                if probe.is_idle and probe.tag != self.probeguard:
+                    self.probescout = probe.tag
+                    return
+        else:
+            scout = self.units.find_by_tag(self.probescout)
+            if not scout:
+                self.probescout = False
+                return
+            else:
+                for enemyStartLoc in list(self.enemy_start_locations):
+                    self.microActions.append(scout.move(enemyStartLoc.position, queue=True))
+                self.scoutProbe = True
+                return
+
+        await self.scoutroutine(scout)
+
+    async def scoutroutine(self, scout):
+        if not scout:
+            return
+
+        if scout.noqueue:
+            for enemyStartLoc in list(self.enemy_start_locations):
+                if scout.noqueue:
+                    self.microActions.append(scout.move(enemyStartLoc.position, queue=True))
+                    self.microActions.append(scout.move(self.state.mineral_field.random.position, queue=True))
+
 
     async def on_step(self, iteration):
-        if iteration > 0:
-            await self.situation.update(iteration)
+        self.enemyRace = self.enemy_race
+        self.microActions = []
+
+        await self.update()
 
         #Сообщения в чат
         if iteration == 0:
             await self.chat_send("Orange_Cat "+ VERSION)
         if iteration == 30:
             await self.chat_send("glhf")
+
+        if self.enemyRace == Race.Random:
+            self.scouting()
 
         #Если NEXUS сломан - все пробки идут в атаку
         if not self.units(NEXUS).ready.exists:
@@ -73,31 +128,42 @@ class Orange_Cat(sc2.BotAI):
         if self.supply_left < 2 and not self.already_pending(PYLON):
             if self.can_afford(PYLON):
                 await self.build(PYLON, near=nexus)
+                self.actions.append("Пилон")
 
         #Заказ пробки
-        if self.workers.amount < self.units(NEXUS).amount*15 and nexus.noqueue:
-            if self.can_afford(PROBE):
-                #Баф NEXUS
-                if not nexus.has_buff(BuffId.CHRONOBOOSTENERGYCOST):
-                    abilities = await self.get_available_abilities(nexus)
-                    if AbilityId.EFFECT_CHRONOBOOSTENERGYCOST in abilities:
-                        await self.do(nexus(AbilityId.EFFECT_CHRONOBOOSTENERGYCOST, nexus))
-                await self.do(nexus.train(PROBE))
+        for nx in self.units(NEXUS):
+            if nx.assigned_harvesters != nx.ideal_harvesters:
+                if self.can_afford(PROBE):
+                    #Баф NEXUS
+                    if not nexus.has_buff(BuffId.CHRONOBOOSTENERGYCOST):
+                        abilities = await self.get_available_abilities(nexus)
+                        if AbilityId.EFFECT_CHRONOBOOSTENERGYCOST in abilities:
+                            await self.do(nexus(AbilityId.EFFECT_CHRONOBOOSTENERGYCOST, nexus))
+                    await self.do(nexus.train(PROBE))
+                    self.actions.append("Пробка")
+
         #Постройка пилона
-        elif not self.units(PYLON).exists and not self.already_pending(PYLON):
+        if not self.units(PYLON).exists and not self.already_pending(PYLON):
             if self.can_afford(PYLON):
                 await self.build(PYLON, near=nexus)
+                self.actions.append("Пилон")
+
 
         #Добыча минералов свободными пробками
-        for idle_worker in self.workers.idle:
-            mf = self.state.mineral_field.closest_to(idle_worker)
-            await self.do(idle_worker.gather(mf))
+        if self.workers.idle and self.scoutProbe:
+            for nx in self.units(NEXUS):
+                if nx.assigned_harvesters != nx.ideal_harvesters:
+                    for idle_worker in self.workers.idle:
+                        mf = self.state.mineral_field.closest_to(nx)
+                        await self.do(idle_worker.gather(mf))
 
         #Постройка NEXUS'ов
         if self.units(NEXUS).amount < 3 and not self.already_pending(NEXUS):
             if self.can_afford(NEXUS):
                 await self.expand_now()
+                self.actions.append("Нексус")
 
+        await self.do_actions(self.microActions)
         #
         Orange_Cat.printInfo(self)
 
