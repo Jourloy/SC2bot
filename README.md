@@ -1,4 +1,4 @@
-# SC2bot
+![alt-текст](https://github.com/Jourloy/SC2bot/blob/master/photo/Bot%20for%20Starcraft%202.png)
 ### Требования для работы:
 1. [Python 3.7+](https://www.python.org/downloads/)
 2. Windows 10
