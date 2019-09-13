@@ -38,25 +38,25 @@ class Orange_Cat(sc2.BotAI):
 
         self.situation = situation.situation()
 
-    #def printInfo(self):
-    #    if self.supplyBlocked:
-    #        supplyBlock = "ДА"
-    #    else:
-    #        supplyBlock = "НЕТ"
-    #    os.system('cls')
-    #    print("----------------------------------------------------------- ")
-    #    print("Основная информация")
-    #    print("Время в секундах: {}".format(str(round(self.time))))
-    #    print("Раса противника: {}".format(self.enemyRaceStr))
-    #    print("Сапплай блок: {}".format(supplyBlock))
-    #    print("\nРесурсы")
-    #    print("Минералы: {}".format(str(self.minerals)))
-    #    print("Газ: {}".format(str(self.vespene)))
-    #    print("\nЮниты")
-    #    print("Рабы: {}".format(str(self.workers.amount)))
-    #    print("----------------------------------------------------------- ")
-    #    for x in self.actions:
-    #        print(x)
+    def printInfo(self):
+        if self.supplyBlocked:
+            supplyBlock = "ДА"
+        else:
+            supplyBlock = "НЕТ"
+        os.system('cls')
+        print("----------------------------------------------------------- ")
+        print("Основная информация")
+        print("Время в секундах: {}".format(str(round(self.time))))
+        print("Раса противника: {}".format(self.enemyRaceStr))
+        print("Сапплай блок: {}".format(supplyBlock))
+        print("\nРесурсы")
+        print("Минералы: {}".format(str(self.minerals)))
+        print("Газ: {}".format(str(self.vespene)))
+        print("\nЮниты")
+        print("Рабы: {}".format(str(self.workers.amount)))
+        print("----------------------------------------------------------- ")
+        for x in self.actions:
+            print(x)
 
     async def scouting(self):
         if not self.probescout:
