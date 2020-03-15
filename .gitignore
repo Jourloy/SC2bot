@@ -1,3 +1,4 @@
 
 *.pyc
 HumanVsBot.py
+.DS_Store
